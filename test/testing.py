@@ -20,4 +20,5 @@ for rot in range(4):
 print traced.T
 print grid.T.astype(int)
 
-encoder.draw_decoder_grid("test.svg",grid)
+encoder.draw_grid("grid.svg",grid)
+encoder.draw_decoder("decoder.svg",grid)

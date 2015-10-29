@@ -4,7 +4,7 @@ import math
 import random
 import cairo
 
-def trace_R4(secretmessage,grid):
+def trace(secretmessage,grid):
     """Run through the grid and place a letter for each
     True slot as you go, rotating up to four times until
     you run out of space.
@@ -23,7 +23,7 @@ def trace_R4(secretmessage,grid):
                         return messagegrid
         grid=np.rot90(grid)
 
-def template_R4(messagestring):
+def template(messagestring):
     """Create a grid of appropriate dimensions to fit
     the given message and set all slots to False.
     If dimensions are odd, set the center tile to True,
@@ -46,7 +46,7 @@ def template_R4(messagestring):
         grid[dim/2,dim/2]=True
     return grid
 
-def R4(messagestring):
+def make(messagestring):
     """Create an decoder that reveals the given message
     with 4 90 degree rotations.
 
@@ -72,54 +72,3 @@ def R4(messagestring):
 
     return grid
 
-def draw_decoder_grid(target,decoder,ts=60,fs=0.7,lw=6):
-    """Create an svg image of a grid with the appropriate
-    number of tiles. Includes a border.
-
-    :target: svg filename
-    :decoder: ndarray
-    :ts: int, size of a square tile
-    :fs: float, font size relative to tile size
-    :lw: int, line width
-    :returns: void
-
-    """
-    xtiles,ytiles=decoder.shape
-    w=xtiles*ts+2*ts
-    h=ytiles*ts+2*ts
-    ps = cairo.SVGSurface(target, w, h)
-    cr = cairo.Context(ps)
-    
-    cr.set_source_rgb(0, 0, 0)
-    cr.set_line_width(lw)
-    
-    #draw the edges of the decoder
-    #cr.move_to(ts,ts)
-    #cr.line_to(ts,h-ts)
-    #cr.line_to(w-ts,h-ts)
-    #cr.line_to(w-ts,ts)
-    #cr.line_to(ts,ts)
-
-    #draw vertical lines
-    for x in range(xtiles+1):
-        cr.move_to(x*ts+ts,ts)
-        cr.line_to(x*ts+ts,h-ts)
-
-    #draw horizontal lines
-    for y in range(ytiles+1):
-        cr.move_to(ts,y*ts+ts)
-        cr.line_to(w-ts,y*ts+ts)
-
-    cr.select_font_face("Sans", cairo.FONT_SLANT_NORMAL,
-                    cairo.FONT_WEIGHT_BOLD)
-    cr.set_font_size(round(fs*ts))
-
-    pad=(1-fs)*ts/2.0+lw/2.0
-    cr.move_to(ts+pad,2*ts-pad)
-    cr.show_text("H")
-
-    cr.rectangle(3*ts,4*ts,ts,ts)
-    cr.fill_preserve()
-
-    cr.stroke()
-    cr.show_page()

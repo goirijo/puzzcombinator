@@ -1,14 +1,14 @@
-import encoder
+import puzzcombinator as pz
 import numpy as np
 
 teststring="HellotheremynameisRoberto.Ihavebiglongclawsandhungryeyes.\
-            Paynoattentiontothatloser.Hebelievestheundergroundisahidingspot\
-            forhardearnedmoney."
+Paynoattentiontothatloser.Hebelievestheundergroundisahidingspot\
+forhardearnedmoney."
 
 
-grid=encoder.R4(teststring)
+grid=pz.encoder.R4.make(teststring)
 
-traced=encoder.trace_R4(teststring,grid)
+traced=pz.encoder.R4.trace(teststring,grid)
 canvas=traced.copy()
 for rot in range(4):
     canvas[:,:]=" "
@@ -20,5 +20,6 @@ for rot in range(4):
 print traced.T
 print grid.T.astype(int)
 
-encoder.draw_grid("grid.svg",grid)
-encoder.draw_decoder("decoder.svg",grid)
+pz.encoder.draw_grid("grid.svg",grid)
+pz.encoder.draw_decoder("decoder.svg",grid)
+pz.encoder.draw_encoded("encoded.svg",traced,teststring)

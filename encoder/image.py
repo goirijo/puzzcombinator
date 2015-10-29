@@ -1,3 +1,6 @@
+import numpy as np
+import cairo
+
 def _canvas_dims(decoder,ts):
     """TODO: Docstring for _canvas_dims.
 
@@ -121,7 +124,7 @@ def _stamp_tile(cr,ts,fs,lw,x,y,char):
     cr.set_font_size(fs*(ts-lw))
 
     pad=(1-fs)*ts/2.0+lw
-    cr.move_to(ts*(x+1)+pad,ts*(y+1)-pad)
+    cr.move_to(ts*(x+1)+pad,ts*(y+2)-pad)
     cr.show_text(char)
 
     return cr
@@ -164,17 +167,23 @@ def draw_decoder(target,decoder,ts=60,lw=6):
 
     return cr
 
-def draw_encoded(target,decoder,message,ts=60,lw=60):
+def draw_encoded(target,traced,message,ts=60,lw=6,fs=0.7):
     """Trace out the message onto the grid such that
     it can only be recovered with the decoder.
 
     :target: svg filename
-    :decoder: ndarray
+    :traced: ndarray of string
     :message: string
     :ts: int, size of a square tile
     :lw: int, line width
     :returns: cairo context
 
     """
-    pass
+    cr=draw_grid(target,traced,ts,lw)
+
+    for xind, x in enumerate(traced):
+        for yind, y in enumerate(x):
+            _stamp_tile(cr,ts,fs,lw,xind,yind,y)
+
+    return cr
 

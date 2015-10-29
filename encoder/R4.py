@@ -1,8 +1,6 @@
 import numpy as np
-import statm2d as sm2d
 import math
 import random
-import cairo
 
 def trace(secretmessage,grid):
     """Run through the grid and place a letter for each
@@ -54,7 +52,7 @@ def make(messagestring):
     :returns: ndarray of bool
 
     """
-    counter=template_R4(messagestring)
+    counter=template(messagestring)
     grid=np.copy(counter)
     grid[...]=False
 

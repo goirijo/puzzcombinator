@@ -167,13 +167,12 @@ def draw_decoder(target,decoder,ts=60,lw=6):
 
     return cr
 
-def draw_encoded(target,traced,message,ts=60,lw=6,fs=0.7):
+def draw_encoded(target,traced,ts=60,lw=6,fs=0.7):
     """Trace out the message onto the grid such that
     it can only be recovered with the decoder.
 
     :target: svg filename
     :traced: ndarray of string
-    :message: string
     :ts: int, size of a square tile
     :lw: int, line width
     :returns: cairo context

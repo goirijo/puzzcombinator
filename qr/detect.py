@@ -417,7 +417,7 @@ def _outer_quad(biggies):
     fourth1=_intersection(p1p2,p5p6)
     fourth2=_intersection(p3p4,p5p6)
 
-    fourth=(fourth1+fourth1+fourth1)/3
+    fourth=(fourth0+fourth1+fourth2)/3
 
     complete=np.vstack((outertri,fourth))
     resorted=np.asarray(complete[[0,2,3,1]],dtype=np.int32)
@@ -465,8 +465,9 @@ def _extract_code(frame,refpoints,l):
     """
     #rows,cols,ch=frame.shape
     refpoints=np.float32(refpoints)
+
     #put the corners on the upper left
-    newlocs=np.float32([[0,0],[l,0],[0,l],[l,l]])
+    newlocs=np.float32([[0,0],[l,0],[l,l],[0,l]])
     #M=cv2.getAffineTransform(refpoints,newlocs)
     M=cv2.getPerspectiveTransform(refpoints,newlocs)
 
@@ -474,7 +475,7 @@ def _extract_code(frame,refpoints,l):
 
     return extracted
 
-def extract_and_highlight(frame,l=200):
+def extract_and_highlight(frame,l=100):
     """Highlight the corners in the frame and also
     cut out the code from the image.
 
@@ -487,14 +488,14 @@ def extract_and_highlight(frame,l=200):
     squares,hiersq=_squares(framecopy)
     corners=_corners(squares,unroll=False)
     biggies=_big_corners(corners)
-    biggies=_outer_quad(biggies)
+    quad=_outer_quad(biggies)
 
 
     highlighted=_corner_highlight(framecopy,corners)
     extracted=np.zeros((l,l,3))
 
-    if len(biggies)==3:
-        refpoints=_outer_triangle(biggies)
-        extracted=_extract_code(frame,refpoints,l)
+    if len(quad)==4:
+        extracted=_extract_code(frame,quad,l)
+
     
     return highlighted,extracted

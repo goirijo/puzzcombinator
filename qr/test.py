@@ -10,7 +10,7 @@ imcount=0
 while(k!=27):
     ret,frame=cap.read()
 
-    l=200
+    l=100
     high,ex=detect.extract_and_highlight(frame,l)
     high[-l-1:-1,-l-1:-1,:]=ex[...]
 

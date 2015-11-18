@@ -467,7 +467,7 @@ def _extract_code(frame,refpoints,l):
     refpoints=np.float32(refpoints)
 
     #put the corners on the upper left
-    newlocs=np.float32([[0,0],[l,0],[l,l],[0,l]])
+    newlocs=np.float32([[0,0],[0,l],[l,l],[l,0]])
     #M=cv2.getAffineTransform(refpoints,newlocs)
     M=cv2.getPerspectiveTransform(refpoints,newlocs)
 
@@ -492,10 +492,22 @@ def extract_and_highlight(frame,l=100):
 
 
     highlighted=_corner_highlight(framecopy,corners)
-    extracted=np.zeros((l,l,3))
+    extracted=np.zeros((l,l))
 
     if len(quad)==4:
         extracted=_extract_code(frame,quad,l)
+        gray=cv2.cvtColor(extracted,cv2.COLOR_RGB2GRAY)
 
+        sqarea=int(cv2.contourArea(biggies[0]))
+        blocksize=sqarea/15
+        blocksize=blocksize+1+blocksize%2
+
+
+        extracted=cv2.adaptiveThreshold(gray,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C,cv2.THRESH_BINARY_INV,blocksize,1)
+        #ret,extracted=cv2.threshold(gray,0,255,cv2.THRESH_BINARY_INV | cv2.THRESH_OTSU)
+        kernel=np.ones((1,1))
+        #extracted=cv2.morphologyEx(extracted,cv2.MORPH_OPEN,kernel)
+        extracted=cv2.morphologyEx(extracted,cv2.MORPH_CLOSE,kernel)
+        extracted=cv2.bitwise_not(extracted)
     
     return highlighted,extracted

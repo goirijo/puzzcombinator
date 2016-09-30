@@ -53,5 +53,4 @@ for x in range(int(coldims)):
 
         collage[x0:x1,y0:y1,:]=img
 
-collage=
-cv2.imwrite("test.jpg",collage)
+collage=cv2.imwrite("test.jpg",collage)

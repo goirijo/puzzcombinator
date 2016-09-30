@@ -1,4 +1,4 @@
 import encoder
-import xmap
+import maps
 import qr
 from encoder.encoder import Encoder

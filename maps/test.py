@@ -45,6 +45,40 @@ print testtree.focus_urls()[0][0]
 print testtree.center_urls()[0]
 print testtree.top_url()
 
+
+testtree=MapTree(coords)
+r0,r1,r2=4,3,2
+testtree.recursive_branch((0.052,0.052),r0)
+testtree.recursive_branch((0.007,0.007),r1)
+testtree.recursive_branch((0.001,0.001),r2)
+
+print testtree.location_url(size=["500x500"],zoom=[10])
+print testtree.obfuscated_location_url(size=["500x500"])
+
+print "-------"
+print testtree.recursive_urls(size=["500x500"])
+
+print "LEVELS"
+for t in testtree.children():
+    for tt in t.children():
+        print tt._level
+        for ttt in tt.children():
+            print ttt._level
+
+print testtree.access_node((0,))._children
+
+print "PACKAGE"
+print testtree.recursive_urls(size=["500x500"])
+for i in range(r0+1):
+    address=(i,)
+    print address,testtree.access_node(address).recursive_urls(size=["500x500"])
+    for j in range(r1+1):
+        address=(i,j)
+        print address,testtree.access_node(address).recursive_urls(size=["500x500"])
+        for k in range(r2+1):
+            address=(i,j,k)
+            print address,testtree.access_node(address).recursive_urls(size=["500x500"])
+
 #Resolution zoom size=1000x1000
 #0.0012 18
 #0.0006 19

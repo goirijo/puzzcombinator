@@ -25,6 +25,23 @@ def distributed_coordinates(anchor,ranges,amount):
 
     return zip(fuzzlats,fuzzlongs)
 
+def dummy_locations(location,ranges,amount):
+    """Given a location, randomly pick an anchor that falls within
+    the specified range and generate new coordinates around the new anchor.
+    The result is a list of fake coordinates that is randomly centered,
+    but encompasses the original location (not included in return)
+
+    :location: (float,float)
+    :ranges: (float,float)
+    :amount: int
+    :returns: list of (float,float)
+
+    """
+    anchor=distributed_coordinates(location,ranges,1)[0]
+    dummy_coords=distributed_coordinates(anchor,ranges,amount)
+    
+    return dummy_coords
+
 def obfuscate_location(location,ranges,amount):
     """Given a location, randomly pick an anchor that falls within
     the specified range and generate new coordinates around the new anchor.
@@ -167,7 +184,6 @@ class GenericMap(object):
         print [self.location_url(l) for l in self._obfuscated_location]
         return [self.location_url(l) for l in self._obfuscated_location]
         
-
 class EasyMapTree(object):
 
     """Holds a secret latitude and longitude, whose precise value
@@ -203,8 +219,6 @@ class EasyMapTree(object):
 
         self._topmap._obfuscated_location=[loc for cm in self._centermaps for loc in cm._obfuscated_location]
 
-
-
     def top_url(self):
         """Gets the URL for the top level view with everything.
 
@@ -228,4 +242,132 @@ class EasyMapTree(object):
         :returns: list if list of str
         """
         return [ centergroup for centergroup in [ zoommap.all_location_urls() for zoommap in self._centermaps ] ]
+
+
+class MapTree(object):
+
+    """Starting with a secret longitude and longitude, the location can be
+    obfuscated by periodically scattering more fake locations an arbitrary
+    number of times as requested
+
+    This class is like starting at the top of a tree where there are many
+    branches, and stepping down one level with every step of descend.
+    The number of descends determines how many levels of location clouds
+    are created.
+    """
+
+    def __init__(self,location):
+        """
+        Saves the location, nothing else.
+
+        :location: (float,float)
+
+        """
+        self._location = location
+
+        self._recursion_args=None
+        self._level=0
+        self._children=[]
+        
+    def recursive_branch(self, *args):
+        """Create child nodes from the stored location
+
+        :args: arguments to pass to dummy_locations
+        :returns: void
+
+        """
+        if(self._level==0):
+            self._recursion_args=args
+
+            dummy_coords=obfuscate_location(self._location, *args)
+            self._children+=[MapTree(l) for l in dummy_coords]
+
+
+        else:
+            for c in self._children:
+                c.recursive_branch(*args)
+
+        self._level+=1
+        return
+
+    def location_url(self, **kwargs):
+        """Generates URL for single marker of location
+
+        :kwargs: parameters to pass to google.generate_generic_url
+        :returns: str
+
+        """
+        location_str=coord_to_str(self._location)
+
+        return google.generate_generic_url(markers=[location_str], **kwargs)
+
+    def obfuscated_location_url(self, **kwargs):
+        """Generates URL for several markers, among them the location
+
+        :kwargs: parameters to pass to google.generate_generic_url
+        :returns: str
+
+        """
+        location_strs=coords_to_str([c._location for c in self._children])
+
+        return google.generate_generic_url(markers=location_strs, **kwargs)
+
+    def recursive_locations(self):
+        """Recursively descend down the tree and collect every location there is
+
+        :returns: list of (float,float)
+        """
+        if self._level==0:
+            assert(len(self._children)==0)
+            return [self._location]
+        else:
+            concatenated_locs=[]
+            for child in self._children:
+                concatenated_locs+=child.recursive_locations()
+
+            return concatenated_locs
+
+    def recursive_urls(self, **kwargs):
+        """Generates URL for several markers, including all the children
+        and their children and their children...
+
+        :kwargs: parameters to pass to google.generate_generic_url
+        :returns: str
+
+        """
+        location_strs=coords_to_str(self.recursive_locations())
+
+        return google.generate_generic_url(markers=location_strs, **kwargs)
+
+    def children(self):
+        """Return list of child nodes
+
+        :returns: list of MapTree
+        """
+        return self._children
+
+    def child(self, index):
+        """Return child specified by index
+
+        :index: int
+        :returns: list of MapTree
+        """
+        return self._children[index]
+
+    def access_node(self, nodecoords):
+        """Returns the MapTree found after traversing the children in the
+        order of the specified nodecoords
+
+        :nodecoords: (int, int, ... , int)
+        :returns MapTree
+        """
+        if(len(nodecoords)>self._level):
+            raise ValueError("The specified node traverses further than the MapTree")
+
+        target_node=self
+
+        for c in nodecoords:
+            target_node=target_node.child(c)
+
+        return target_node
 

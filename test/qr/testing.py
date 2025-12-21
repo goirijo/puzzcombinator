@@ -26,7 +26,7 @@ def video_test():
 def video_test2():
     cap=cv2.VideoCapture(0)
 
-    fourcc=cv2.cv.CV_FOURCC(*"XVID")
+    fourcc=cv2.VideoWriter_fourcc(*"XVID")
     out=cv2.VideoWriter("out.avi",fourcc,20.0,(640,480))
 
     while cap.isOpened():

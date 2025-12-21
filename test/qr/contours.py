@@ -15,7 +15,7 @@ def threshslider_range(name):
 
     return t,m
 
-#cv2.namedWindow("thresholds")
+cv2.namedWindow("thresholds")
 create_threshslider("thresholds")
 
 cap=cv2.VideoCapture(0)
@@ -66,7 +66,7 @@ while(k!=27):
 
             squares.append(approx)
     except:
-        print "Um... yeah"
+        print("Um... yeah")
     
     cv2.drawContours(frame,squares,-1,(0,255,0),1)
 
@@ -83,13 +83,15 @@ while(k!=27):
     k=cv2.waitKey(10)
 
     if k==ord("p"):
-        print len(squares)
+        print(len(squares))
 
     if k==ord("s"):
         filename="squares"+str(imcount)+".jpg"
-        print "Writing "+filename
+        print("Writing "+filename)
         cv2.imwrite(filename,frame)
         imcount+=1
 
 cap.release()
 cv2.destroyAllWindows()
+
+print("hello")

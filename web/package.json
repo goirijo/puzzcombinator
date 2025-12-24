@@ -18,6 +18,8 @@
     "@fastify/autoload": "^6.0.0",
     "@fastify/sensible": "^6.0.0",
     "@fastify/formbody": "^8.0.0",
+    "@fastify/view": "^10.0.0",
+    "ejs": "^3.1.10",
     "fastify": "^5.6.2",
     "fastify-cli": "^7.4.1",
     "fastify-plugin": "^5.0.0"

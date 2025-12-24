@@ -1,0 +1,18 @@
+<!doctype html>
+<html>
+  <body>
+
+    <h1>Profile <%= profileId %></h1>
+
+    <form method="POST" action="/<%= basePath %>/<%= profileId %>/answer">
+      <input name="answer" placeholder="Your answer">
+      <button>Submit</button>
+    </form>
+
+    <% if (answer) { %>
+      <p><strong>Recorded:</strong> <%= answer %></p>
+    <% } %>
+
+  </body>
+</html>
+

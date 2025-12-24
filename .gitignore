@@ -1,3 +1,6 @@
 .*.swp
 *.pyc
 *.svg
+web/node_modules
+testing.out
+package-lock.json

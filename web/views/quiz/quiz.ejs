@@ -1,18 +1,32 @@
 <!doctype html>
-<html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz - Profile <%= profileId %></title>
+
+    <!-- Local Bootstrap CSS -->
+    <link rel="stylesheet" href="/public/css/bootstrap.min.css">
+  </head>
   <body>
+    <div class="container mt-5 d-flex justify-content-center">
+      <div class="card p-4 shadow-sm" style="width: 350px;">
+        <h1 class="mb-4 text-center">Profile <%= profileId %></h1>
 
-    <h1>Profile <%= profileId %></h1>
+        <form method="POST" action="/<%= basePath %>/<%= profileId %>/answer">
+          <div class="mb-3">
+            <input type="text" name="answer" class="form-control" placeholder="Your answer">
+          </div>
+          <button class="btn btn-primary w-100">Submit</button>
+        </form>
 
-    <form method="POST" action="/<%= basePath %>/<%= profileId %>/answer">
-      <input name="answer" placeholder="Your answer">
-      <button>Submit</button>
-    </form>
-
-    <% if (answer) { %>
-      <p><strong>Recorded:</strong> <%= answer %></p>
-    <% } %>
-
+        <% if (answer) { %>
+          <div class="alert alert-success mt-3">
+            <strong>Recorded:</strong> <%= answer %>
+          </div>
+        <% } %>
+      </div>
+    </div>
   </body>
 </html>
 

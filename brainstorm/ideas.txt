@@ -1,0 +1,49 @@
+Token system.
+Solving small puzzles rewards you with tokens.
+Tokens also build up over time so that you can pay your way out of a challenge you're stuck in.
+Tokens are actually worth cash at the end, but players don't know that until the game is over.
+Certain players are made aware of this, motivating them to be selfish and hoard tokens.
+Create perverse incentives for certain players.
+Make it impossible to win without cooperating.
+Two teams need to negotiate tokens at the end to finish the game.
+Each player has an account, and they can transfer tokens to each other
+
+"meaningless" calibration survey selects a few bad actors based on selfish answers
+Liars are punished at the end of the game (lose tokens)
+
+More than one hint where it seems there should be one (single person is told, can decide to share or not)
+
+Hints are vacuum sealed, unopened hints can be redeemed for tokens.
+
+QR codes to gain tokens
+QR code for next hint
+
+Nonograms
+
+Alphabet soup
+
+Invisible ink
+
+Overlapping transparencies
+
+cryptogram
+
+QR code completed by placing stickers on a grid
+
+word emerges from solving crossword
+
+hiding message in a book. give page number and superimpose paper with holes to read through
+
+acrostics
+
+https://www.puzzlebaron.com/portfolio-category/printable-puzzles/
+
+morse code
+
+musical notation
+
+mine finder (battleship solitaire)
+
+battleship between two teams (they place ships at the beginning, then can bomb as game progresses)
+
+google street view. told to face a direction, then a series of steps lands you somewhere else (e.g. forward, forward, left, forward)

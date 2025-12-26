@@ -1,6 +1,6 @@
 import importlib
-import R4
-import image
+from . import R4
+from . import image
 
 class Encoder(object):
 

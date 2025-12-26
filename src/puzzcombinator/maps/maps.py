@@ -181,7 +181,7 @@ class GenericMap(object):
         :returns: TODO
 
         """
-        print [self.location_url(l) for l in self._obfuscated_location]
+        print([self.location_url(l) for l in self._obfuscated_location])
         return [self.location_url(l) for l in self._obfuscated_location]
         
 class EasyMapTree(object):

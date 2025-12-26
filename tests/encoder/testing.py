@@ -10,4 +10,4 @@ teststring="Hello Blanchedporcupine! Here is an example of some text you can enc
         Otherwise I can give you access to my github repository."
 
 testcoder=pz.Encoder(teststring,"test")
-testcoder.draw("testdraw")
+testcoder.draw("./testing.out")

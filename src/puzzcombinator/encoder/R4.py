@@ -41,7 +41,7 @@ def template(messagestring):
 
     grid=np.zeros((dim,dim),dtype=bool)
     if dim%2!=0:
-        grid[dim/2,dim/2]=True
+        grid[dim//2,dim//2]=True
     return grid
 
 def make(messagestring):
@@ -58,7 +58,7 @@ def make(messagestring):
 
     while not np.all(counter==True):
         candidates=np.where(counter==False)
-        candidates=zip(candidates[0],candidates[1])
+        candidates=list(zip(candidates[0],candidates[1]))
         winind=random.randint(0,len(candidates)-1)
         winner=candidates[winind]
 

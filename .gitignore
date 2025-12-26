@@ -4,3 +4,4 @@
 web/node_modules
 testing.out
 package-lock.json
+puzzcombinator.egg-info

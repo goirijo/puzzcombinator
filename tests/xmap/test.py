@@ -30,7 +30,7 @@ for img in imglist:
 coldims=math.ceil(math.sqrt(len(imglist)))
 collage=np.zeros((coldims*maxrows,coldims*maxcols,maxchannel))
 
-print collage.shape
+print(collage.shape)
 
 #stamp in images one at a time
 for x in range(int(coldims)):
@@ -49,7 +49,7 @@ for x in range(int(coldims)):
         y0=yidx
         y1=yidx+cols
 
-        print x0,x1,y0,y1
+        print(x0,x1,y0,y1)
 
         collage[x0:x1,y0:y1,:]=img
 

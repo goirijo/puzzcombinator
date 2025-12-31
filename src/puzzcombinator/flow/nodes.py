@@ -1,49 +1,20 @@
 from __future__ import annotations
 from typing import Protocol, runtime_checkable, TextIO, Iterable, TypeAlias, Union
+from dataclasses import dataclass
 
 @runtime_checkable
 class FileRepresentable(Protocol):
     def to_file(self, fileobj: TextIO) -> None:
         ...
 
-class Edge(object):
 
-    """The Edge is an edge in the graph that represents the entire collection of puzzles. Each edge
-    is associated with a piece of data that is (except for the start and end nodes)
-    the output of a node, and the input of the next node.
-    Data is combined at a node to complete the set of clues necessary to solve a single
-    puzzle, which yields an output. This output is then input for another node."""
-
-    def __init__(self, content):
-        """The content is the piece of data relevant for this particular edge. It can be basically
-        anything, but it needs to have certain functions defined to generate visual representations
-        of it
-
-        Parameters
-        ----------
-        content : Anything you want, but it needs to have a to_file defined
-        parent : The node this edge originates from
-        child : The node this edge points to
-
-
-        """
-        if not isinstance(content, FileRepresentable):
-            raise TypeError("content must implement to_file(fileobj)")
-        self._content = content
-        self._parent = None
-        self._child = None
-
-    def assign_parent(self, parent: Node) -> None:
-        """Assign the given Node as the parent"""
-        self._parent = parent
-
-    def assign_child(self, child: Node) -> None:
-        """Assign the given Node as the parent"""
-        self._child = child
+@dataclass
+class _Metadata:
+    label: str | None = None
+    memo: str | None = None
 
 
 class HexIdGenerator:
-
     """Just makes random looking labels for the Node class"""
 
     def __init__(self, width: int = 4, seed: int = 0):
@@ -59,11 +30,91 @@ class HexIdGenerator:
         return f"{n:0{self._width}x}"
 
 
+class _HasMetadata:
+    _metadata: _Metadata
+
+    _idGenerator = HexIdGenerator(2)
+
+    def __init__(self, *, label=None, memo=None):
+        if label is None:
+            label = self._next_label()
+
+        self._metadata = _Metadata(label=label, memo=memo)
+
+    @property
+    def label(self):
+        return self._metadata.label
+
+    @property
+    def memo(self):
+        return self._metadata.memo
+
+    @classmethod
+    def _next_label(cls) -> str:
+        return cls._idGenerator.next()
+
+    def _repr_metadata(self) -> str:
+        parts = []
+        if self.label is not None:
+            parts.append(f"label={self.label!r}")
+        if self.memo is not None:
+            parts.append(f"memo={self.memo!r}")
+        return ", ".join(parts)
+
+
+
+class Edge(_HasMetadata):
+
+    """The Edge is an edge in the graph that represents the entire collection of puzzles. Each edge
+    is associated with a piece of data that is (except for the start and end nodes)
+    the output of a node, and the input of the next node.
+    Data is combined at a node to complete the set of clues necessary to solve a single
+    puzzle, which yields an output. This output is then input for another node."""
+
+    def __init__(self, content, *, label: str | None = None, memo: str | None = None):
+        """The content is the piece of data relevant for this particular edge. It can be basically
+        anything, but it needs to have certain functions defined to generate visual representations
+        of it
+
+        Parameters
+        ----------
+        content : Anything you want, but it needs to have a to_file defined
+        parent : The node this edge originates from
+        child : The node this edge points to
+
+
+        """
+        super().__init__(label=label, memo=memo)
+
+        if not isinstance(content, FileRepresentable):
+            raise TypeError("content must implement to_file(fileobj)")
+        self._content = content
+        self._parent = None
+        self._child = None
+
+    def assign_parent(self, parent: Node) -> None:
+        """Assign the given Node as the parent"""
+        self._parent = parent
+
+    def assign_child(self, child: Node) -> None:
+        """Assign the given Node as the parent"""
+        self._child = child
+
+    def __repr__(self) -> str:
+        parts = []
+        meta = self._repr_metadata()
+
+        if meta:
+            parts.append(meta)
+
+        return f"Edge({', '.join(parts)})"
+
+
 
 EdgelikeInput: TypeAlias = Union[Edge, FileRepresentable]
 EdgelikeIterable: TypeAlias = Iterable[EdgelikeInput]
 
-class Node(object):
+class Node(_HasMetadata):
 
     """The Node represents one "step" in the collection of puzzles. This could be solving one
     particular puzzle, combining many pieces together to form a new object or hint, or moving to
@@ -72,16 +123,31 @@ class Node(object):
     The Edges coming in are the hints or any other required data or objects needed to move to the
     next Node, while the output is the next bit of information needed to move the game forward"""
 
-    _idGenerator = HexIdGenerator(2)
+    def __init__(self, ins: EdgelikeInput, outs: EdgelikeInput, *, 
+                 label: str | None = None,
+                 memo: str | None = None):
+        """The ins and outs are arrays of Edges
+
+        Parameter
+        ---------
+        ins : [Iterable[Edge], the pieces necessary to move to the next step
+        outs : [Iterable[Edge], one or more pieces that are needed to complete future Nodes
+        label : str, optional (keyword-only), short tag for the node, randomly generated if None
+        memo : str, optional (keyword-only), description of what should occur at the Node
+
+
+        """
+        super().__init__(label=label, memo=memo)
+
+        self._incoming = type(self)._edges_from_iterable(ins)
+        self._outgoing = type(self)._edges_from_iterable(outs)
+
+        self._assign_self_as_edge_relations()
 
     @classmethod
     def reset_counter_width(width):
         """How many digits do you want on the label?"""
         _idGenerator = HexIdGenerator(width)
-
-    @classmethod
-    def _next_label(cls) -> str:
-        return cls._idGenerator.next()
 
     @staticmethod
     def _wrap_into_edge(obj):
@@ -113,19 +179,15 @@ class Node(object):
         for e in self._incoming:
             e.assign_child(self)
 
-    def __init__(self, ins: EdgelikeInput, outs: EdgelikeInput):
-        """The ins and outs are arrays of Edges
+    def __repr__(self) -> str:
+        parts = []
+        meta = self._repr_metadata()
 
-        Parameter
-        ---------
-        ins : Array of Edges, the pieces necessary to move to the next step
-        outs : Array of Edges, one or more pieces that are needed to complete future Nodes
+        if meta:
+            parts.append(meta)
 
+        parts.append(f"in={len(self._incoming)}")
+        parts.append(f"out={len(self._outgoing)}")
 
-        """
-        self._incoming = type(self)._edges_from_iterable(ins)
-        self._outgoing = type(self)._edges_from_iterable(outs)
-
-        self._assign_self_as_edge_relations()
-
-        self.label = self._next_label()
+        args = ", ".join(parts)
+        return f"{self.__class__.__name__}({args})"

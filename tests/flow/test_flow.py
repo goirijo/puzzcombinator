@@ -117,63 +117,52 @@ def generate_graph():
 
     postCombo = StringContent("When ready, team up with other team")
 
-    S = Node([], [startA, startB, postCombo])
-    S._alias="S"
+    S = Node([], [startA, startB, postCombo], label="S", memo="Intro to game")
 
     #---------
 
     FirstA = StringContent("First hint for A")
     Piece1A = StringContent("Piece 1/3 for A")
     A1 = Node([startA], [FirstA, Piece1A])
-    A1._alias="A1"
 
     FirstB = StringContent("First hint for B")
     Piece1B = StringContent("Piece 1/3 for B")
     B1 = Node([startB], [FirstB, Piece1B])
-    B1._alias="B1"
 
     #---------
 
     SecondA = StringContent("Second hint for A")
     Piece2A = StringContent("Piece 2/3 for A")
     A2 = Node([FirstA], [SecondA, Piece2A])
-    A2._alias="A2"
 
     SecondB = StringContent("Second hint for B")
     Piece2B = StringContent("Piece 2/3 for B")
     B2 = Node([FirstB], [SecondB, Piece2B])
-    B2._alias="B2"
 
     #---------
 
     ThirdA = StringContent("Put the pieces together A")
     Piece3A = StringContent("Piece 3/3 for A")
     A3 = Node([SecondA], [ThirdA, Piece3A])
-    A3._alias="A3"
 
     ThirdB = StringContent("Put the pieces together B")
     Piece3B = StringContent("Piece 3/3 for B")
     B3 = Node([SecondB], [ThirdB, Piece3B])
-    B3._alias="B3"
 
     #---------
 
     ComboA = StringContent("All A pieces together")
     AC = Node([Piece1A, Piece2A, Piece3A, ThirdA], [ComboA])
-    AC._alias="AC"
 
     ComboB = StringContent("All B pieces together")
     BC = Node([Piece1B, Piece2B, Piece3B, ThirdB], [ComboB])
-    BC._alias="BC"
 
     #---------
 
     doubleCombo = StringContent("We did it Joe")
     C = Node([ComboA, ComboA, postCombo], [doubleCombo])
-    C._alias="C"
 
     E = Node([doubleCombo], [])
-    E._alias="E"
 
     #---------
 
@@ -182,8 +171,8 @@ def generate_graph():
 def test_graph():
     S = generate_graph()
 
-    print(S._outgoing[0]._parent._alias)
-    print(S.label)
+    print(S)
+    print(S._outgoing)
     
 
 def main():

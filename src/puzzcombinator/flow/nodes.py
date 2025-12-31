@@ -42,6 +42,24 @@ class Edge(object):
         self._child = child
 
 
+class HexIdGenerator:
+
+    """Just makes random looking labels for the Node class"""
+
+    def __init__(self, width: int = 4, seed: int = 0):
+        self._width = width
+        self._mod = 16 ** width
+        self._counter = 0
+        self._mult = 1103515245
+        self._add = seed
+
+    def next(self) -> str:
+        n = (self._counter * self._mult + self._add) % self._mod
+        self._counter += 1
+        return f"{n:0{self._width}x}"
+
+
+
 EdgelikeInput: TypeAlias = Union[Edge, FileRepresentable]
 EdgelikeIterable: TypeAlias = Iterable[EdgelikeInput]
 
@@ -53,6 +71,17 @@ class Node(object):
     of the hunt is defined. Each Node tracks which Edges (which old data) are coming in and out.
     The Edges coming in are the hints or any other required data or objects needed to move to the
     next Node, while the output is the next bit of information needed to move the game forward"""
+
+    _idGenerator = HexIdGenerator(2)
+
+    @classmethod
+    def reset_counter_width(width):
+        """How many digits do you want on the label?"""
+        _idGenerator = HexIdGenerator(width)
+
+    @classmethod
+    def _next_label(cls) -> str:
+        return cls._idGenerator.next()
 
     @staticmethod
     def _wrap_into_edge(obj):
@@ -98,3 +127,5 @@ class Node(object):
         self._outgoing = type(self)._edges_from_iterable(outs)
 
         self._assign_self_as_edge_relations()
+
+        self.label = self._next_label()

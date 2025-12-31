@@ -2,8 +2,10 @@ from __future__ import annotations
 from typing import Protocol, runtime_checkable, TextIO, Iterable, TypeAlias, Union
 from dataclasses import dataclass
 
+
 @runtime_checkable
 class FileRepresentable(Protocol):
+
     def to_file(self, fileobj: TextIO) -> None:
         ...
 
@@ -19,7 +21,7 @@ class HexIdGenerator:
 
     def __init__(self, width: int = 4, seed: int = 0):
         self._width = width
-        self._mod = 16 ** width
+        self._mod = 16**width
         self._counter = 0
         self._mult = 1103515245
         self._add = seed
@@ -62,16 +64,18 @@ class _HasMetadata:
         return ", ".join(parts)
 
 
-
 class Edge(_HasMetadata):
-
     """The Edge is an edge in the graph that represents the entire collection of puzzles. Each edge
     is associated with a piece of data that is (except for the start and end nodes)
     the output of a node, and the input of the next node.
     Data is combined at a node to complete the set of clues necessary to solve a single
     puzzle, which yields an output. This output is then input for another node."""
 
-    def __init__(self, content, *, label: str | None = None, memo: str | None = None):
+    def __init__(self,
+                 content,
+                 *,
+                 label: str | None = None,
+                 memo: str | None = None):
         """The content is the piece of data relevant for this particular edge. It can be basically
         anything, but it needs to have certain functions defined to generate visual representations
         of it
@@ -110,12 +114,11 @@ class Edge(_HasMetadata):
         return f"Edge({', '.join(parts)})"
 
 
-
 EdgelikeInput: TypeAlias = Union[Edge, FileRepresentable]
 EdgelikeIterable: TypeAlias = Iterable[EdgelikeInput]
 
-class Node(_HasMetadata):
 
+class Node(_HasMetadata):
     """The Node represents one "step" in the collection of puzzles. This could be solving one
     particular puzzle, combining many pieces together to form a new object or hint, or moving to
     a particular location. Once all the nodes are connected in a complete map, the entire flow
@@ -123,7 +126,10 @@ class Node(_HasMetadata):
     The Edges coming in are the hints or any other required data or objects needed to move to the
     next Node, while the output is the next bit of information needed to move the game forward"""
 
-    def __init__(self, ins: EdgelikeInput, outs: EdgelikeInput, *, 
+    def __init__(self,
+                 ins: EdgelikeInput,
+                 outs: EdgelikeInput,
+                 *,
                  label: str | None = None,
                  memo: str | None = None):
         """The ins and outs are arrays of Edges

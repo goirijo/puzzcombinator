@@ -1,6 +1,7 @@
 from __future__ import annotations
 from typing import Protocol, runtime_checkable, TextIO, Iterable, TypeAlias, Union
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+import uuid
 
 
 @runtime_checkable
@@ -8,12 +9,6 @@ class FileRepresentable(Protocol):
 
     def to_file(self, fileobj: TextIO) -> None:
         ...
-
-
-@dataclass
-class _Metadata:
-    label: str | None = None
-    memo: str | None = None
 
 
 class HexIdGenerator:
@@ -30,6 +25,23 @@ class HexIdGenerator:
         n = (self._counter * self._mult + self._add) % self._mod
         self._counter += 1
         return f"{n:0{self._width}x}"
+
+
+@dataclass
+class _Identified:
+    id: str = field(default_factory=lambda: str(uuid.uuid4()), init=False)
+
+    def __eq__(self, other):
+        return type(self) is type(other) and self.id == other.id
+
+    def __hash__(self):
+        return hash(self.id)
+
+
+@dataclass
+class _Metadata:
+    label: str | None = None
+    memo: str | None = None
 
 
 class _HasMetadata:
@@ -64,7 +76,7 @@ class _HasMetadata:
         return ", ".join(parts)
 
 
-class Edge(_HasMetadata):
+class Edge(_Identified, _HasMetadata):
     """The Edge is an edge in the graph that represents the entire collection of puzzles. Each edge
     is associated with a piece of data that is (except for the start and end nodes)
     the output of a node, and the input of the next node.
@@ -88,7 +100,8 @@ class Edge(_HasMetadata):
 
 
         """
-        super().__init__(label=label, memo=memo)
+        _Identified.__init__(self)
+        _HasMetadata.__init__(self, label=label, memo=memo)
 
         if not isinstance(content, FileRepresentable):
             raise TypeError("content must implement to_file(fileobj)")
@@ -122,7 +135,7 @@ EdgelikeInput: TypeAlias = FileRepresentable
 EdgelikeIterable: TypeAlias = Iterable[EdgelikeInput]
 
 
-class Node(_HasMetadata):
+class Node(_Identified, _HasMetadata):
     """The Node represents one "step" in the collection of puzzles. This could be solving one
     particular puzzle, combining many pieces together to form a new object or hint, or moving to
     a particular location. Once all the nodes are connected in a complete map, the entire flow
@@ -149,16 +162,19 @@ class Node(_HasMetadata):
 
 
         """
-        super().__init__(label=label, memo=memo)
+        _Identified.__init__(self)
+        _HasMetadata.__init__(self, label=label, memo=memo)
 
         if not isinstance(graph, Graph):
-            raise TypeError(f"Expected a Graph instance for 'graph', got {type(graph).__name__}")
+            raise TypeError(
+                f"Expected a Graph instance for 'graph', got {type(graph).__name__}"
+            )
 
         self.graph = graph
         graph.add_node(self)
 
-        self.incoming_edges = [graph.edge(c) for c in ins ]
-        self.outgoing_edges = [graph.edge(c) for c in outs ]
+        self.incoming_edges = [graph.edge(c) for c in ins]
+        self.outgoing_edges = [graph.edge(c) for c in outs]
 
         self._assign_self_as_edge_relations()
 
@@ -203,8 +219,8 @@ class Node(_HasMetadata):
         args = ", ".join(parts)
         return f"{self.__class__.__name__}({args})"
 
-class Graph(object):
 
+class Graph(object):
     """Directed acyclic graph representing the entire structure of the game.
 
     The class serves as the "identity authority" for the edges. For a given piece
@@ -229,7 +245,11 @@ class Graph(object):
 
         """
         if content not in self._edges_by_content:
-            self._edges_by_content[content] = Edge(content)
+            label = getattr(content, "label", None)
+            memo = getattr(content, "memo", None)
+            self._edges_by_content[content] = Edge(content,
+                                                   label=label,
+                                                   memo=memo)
         return self._edges_by_content[content]
 
     def add_node(self, node):

@@ -204,8 +204,30 @@ def test_graph():
     
 
 def main():
-    plot_graph()
+    #plot_graph()
     #edge_test()
+    S = generate_graph()
+    ordered_nodes = chronological_order(S)
+
+    edges_to_plot = []
+    for node in ordered_nodes:
+        for e in node.outgoing_edges:
+            child = e.target
+            if all(p.source in ordered_nodes[:ordered_nodes.index(child)] for p in child.incoming_edges):
+                edges_to_plot.append((node.label, child.label))
+
+
+    G = nx.DiGraph()
+    edges = edges_to_plot
+
+    for e in edges:
+        print(e)
+
+    G.add_edges_from(edges_to_plot)
+
+    pos = nx.nx_agraph.graphviz_layout(G, prog="sfdp")
+    nx.draw(G, pos, with_labels=True, arrows=True)
+    plt.show()
 
 if __name__=="__main__":
     main()

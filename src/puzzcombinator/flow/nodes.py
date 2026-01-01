@@ -83,8 +83,8 @@ class Edge(_HasMetadata):
         Parameters
         ----------
         content : Anything you want, but it needs to have a to_file defined
-        parent : The node this edge originates from
-        child : The node this edge points to
+        label : str, optional (keyword-only), short tag for the node, randomly generated if None
+        memo : str, optional (keyword-only), description of what should occur at the Node
 
 
         """
@@ -93,16 +93,8 @@ class Edge(_HasMetadata):
         if not isinstance(content, FileRepresentable):
             raise TypeError("content must implement to_file(fileobj)")
         self._content = content
-        self._parent = None
-        self._child = None
-
-    def assign_parent(self, parent: Node) -> None:
-        """Assign the given Node as the parent"""
-        self._parent = parent
-
-    def assign_child(self, child: Node) -> None:
-        """Assign the given Node as the parent"""
-        self._child = child
+        self.source = None
+        self.target = None
 
     def __repr__(self) -> str:
         parts = []
@@ -111,10 +103,22 @@ class Edge(_HasMetadata):
         if meta:
             parts.append(meta)
 
+        if self.source is not None:
+            parts.append(f"source={self.source.label}")
+        else:
+            parts.append(f"source={None}")
+
+        if self.target is not None:
+            parts.append(f"target={self.target.label}")
+        else:
+            parts.append(f"target={None}")
+
+        parts.append(f"content={self._content._value}")
+
         return f"Edge({', '.join(parts)})"
 
 
-EdgelikeInput: TypeAlias = Union[Edge, FileRepresentable]
+EdgelikeInput: TypeAlias = FileRepresentable
 EdgelikeIterable: TypeAlias = Iterable[EdgelikeInput]
 
 
@@ -129,6 +133,7 @@ class Node(_HasMetadata):
     def __init__(self,
                  ins: EdgelikeInput,
                  outs: EdgelikeInput,
+                 graph,
                  *,
                  label: str | None = None,
                  memo: str | None = None):
@@ -136,8 +141,9 @@ class Node(_HasMetadata):
 
         Parameter
         ---------
-        ins : [Iterable[Edge], the pieces necessary to move to the next step
-        outs : [Iterable[Edge], one or more pieces that are needed to complete future Nodes
+        ins : EdgelikeIterable, the pieces necessary to move to the next step
+        outs : EdgelikeIterable, one or more pieces that are needed to complete future Nodes
+        graph : Graph
         label : str, optional (keyword-only), short tag for the node, randomly generated if None
         memo : str, optional (keyword-only), description of what should occur at the Node
 
@@ -145,8 +151,14 @@ class Node(_HasMetadata):
         """
         super().__init__(label=label, memo=memo)
 
-        self._incoming = type(self)._edges_from_iterable(ins)
-        self._outgoing = type(self)._edges_from_iterable(outs)
+        if not isinstance(graph, Graph):
+            raise TypeError(f"Expected a Graph instance for 'graph', got {type(graph).__name__}")
+
+        self.graph = graph
+        graph.add_node(self)
+
+        self.incoming_edges = [graph.edge(c) for c in ins ]
+        self.outgoing_edges = [graph.edge(c) for c in outs ]
 
         self._assign_self_as_edge_relations()
 
@@ -154,13 +166,6 @@ class Node(_HasMetadata):
     def reset_counter_width(width):
         """How many digits do you want on the label?"""
         _idGenerator = HexIdGenerator(width)
-
-    @staticmethod
-    def _wrap_into_edge(obj):
-        """Just for easier construction. Converts whatever into an Edge"""
-        if isinstance(obj, Edge):
-            return obj
-        return Edge(obj)
 
     @classmethod
     def _edges_from_iterable(cls, value):
@@ -179,11 +184,11 @@ class Node(_HasMetadata):
 
     def _assign_self_as_edge_relations(self) -> None:
         """For each Edge, set self as the parent or child accordingly"""
-        for e in self._outgoing:
-            e.assign_parent(self)
+        for e in self.outgoing_edges:
+            e.source = self
 
-        for e in self._incoming:
-            e.assign_child(self)
+        for e in self.incoming_edges:
+            e.target = self
 
     def __repr__(self) -> str:
         parts = []
@@ -192,8 +197,51 @@ class Node(_HasMetadata):
         if meta:
             parts.append(meta)
 
-        parts.append(f"in={len(self._incoming)}")
-        parts.append(f"out={len(self._outgoing)}")
+        parts.append(f"in={len(self.incoming_edges)}")
+        parts.append(f"out={len(self.outgoing_edges)}")
 
         args = ", ".join(parts)
         return f"{self.__class__.__name__}({args})"
+
+class Graph(object):
+
+    """Directed acyclic graph representing the entire structure of the game.
+
+    The class serves as the "identity authority" for the edges. For a given piece
+    of edge content, there is exactly one Edge instance in the graph
+    """
+
+    def __init__(self):
+        """Initialize empty graph """
+        self._edges_by_content = {}
+        self.nodes = set()
+
+    def edge(self, content):
+        """Get or create an Edge for the given content
+
+        Parameters
+        ----------
+        content : object
+
+        Returns
+        -------
+        Edge
+
+        """
+        if content not in self._edges_by_content:
+            self._edges_by_content[content] = Edge(content)
+        return self._edges_by_content[content]
+
+    def add_node(self, node):
+        """Register a node in the graph
+
+        Parameters
+        ----------
+        node : Node
+
+        Returns
+        -------
+        None
+
+        """
+        self.nodes.add(node)

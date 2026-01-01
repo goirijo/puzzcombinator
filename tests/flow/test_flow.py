@@ -2,7 +2,7 @@ import puzzcombinator as pz
 import networkx as nx
 from networkx.drawing.nx_pydot import graphviz_layout
 import matplotlib.pyplot as plt
-from puzzcombinator.flow import Edge, Node
+from puzzcombinator.flow import Edge, Node, Graph
 import pytest
 import re
 
@@ -79,21 +79,20 @@ def test_edge():
     edge = Edge(content)
             
 def test_node():
+    graph = Graph()
+
     ins = [StringContent("first"), StringContent("second"), StringContent("third")]
     outs = [StringContent("out"), StringContent("exit")]
 
-    edges_in = [ Edge(c) for c in ins]
-    edges_out = [ Edge(c) for c in outs]
+    node = Node(ins, outs, graph)
 
-    node = Node(edges_in, edges_out)
+    for e in node.incoming_edges:
+        assert(e.target is not None)
+        assert(e.source is None)
 
-    for e in edges_in:
-        assert(e._child is not None)
-        assert(e._parent is None)
-
-    for e in edges_out:
-        assert(e._child is None)
-        assert(e._parent is not None)
+    for e in node.outgoing_edges:
+        assert(e.target is None)
+        assert(e.source is not None)
 
 def generate_graph():
     """
@@ -110,69 +109,98 @@ def generate_graph():
     generating a piece that is finally combined into AC/BC. Then AC+BC is combined to C, and the end
     is reached.
     """
-    Node._counter = 0
+    graph = Graph()
 
     startA = StringContent("Group into team A")
     startB = StringContent("Group into team B")
 
     postCombo = StringContent("When ready, team up with other team")
 
-    S = Node([], [startA, startB, postCombo], label="S", memo="Intro to game")
+    S = Node([], [startA, startB, postCombo], graph, label="S", memo="Intro to game")
 
     #---------
 
     FirstA = StringContent("First hint for A")
     Piece1A = StringContent("Piece 1/3 for A")
-    A1 = Node([startA], [FirstA, Piece1A])
+    A1 = Node([startA], [FirstA, Piece1A], graph, label="A1")
 
     FirstB = StringContent("First hint for B")
     Piece1B = StringContent("Piece 1/3 for B")
-    B1 = Node([startB], [FirstB, Piece1B])
+    B1 = Node([startB], [FirstB, Piece1B], graph, label="B1")
 
     #---------
 
     SecondA = StringContent("Second hint for A")
     Piece2A = StringContent("Piece 2/3 for A")
-    A2 = Node([FirstA], [SecondA, Piece2A])
+    A2 = Node([FirstA], [SecondA, Piece2A], graph, label="A2")
 
     SecondB = StringContent("Second hint for B")
     Piece2B = StringContent("Piece 2/3 for B")
-    B2 = Node([FirstB], [SecondB, Piece2B])
+    B2 = Node([FirstB], [SecondB, Piece2B], graph, label="B2")
 
     #---------
 
     ThirdA = StringContent("Put the pieces together A")
     Piece3A = StringContent("Piece 3/3 for A")
-    A3 = Node([SecondA], [ThirdA, Piece3A])
+    A3 = Node([SecondA], [ThirdA, Piece3A], graph, label="A3")
 
     ThirdB = StringContent("Put the pieces together B")
     Piece3B = StringContent("Piece 3/3 for B")
-    B3 = Node([SecondB], [ThirdB, Piece3B])
+    B3 = Node([SecondB], [ThirdB, Piece3B], graph, label="B3")
 
     #---------
 
     ComboA = StringContent("All A pieces together")
-    AC = Node([Piece1A, Piece2A, Piece3A, ThirdA], [ComboA])
+    AC = Node([Piece1A, Piece2A, Piece3A, ThirdA], [ComboA], graph, label="AC")
 
     ComboB = StringContent("All B pieces together")
-    BC = Node([Piece1B, Piece2B, Piece3B, ThirdB], [ComboB])
+    BC = Node([Piece1B, Piece2B, Piece3B, ThirdB], [ComboB], graph, label="BC")
 
     #---------
 
     doubleCombo = StringContent("We did it Joe")
-    C = Node([ComboA, ComboA, postCombo], [doubleCombo])
+    C = Node([ComboA, ComboB, postCombo], [doubleCombo], graph, label="C")
 
-    E = Node([doubleCombo], [])
+    E = Node([doubleCombo], [], graph, label="E")
 
     #---------
 
     return S
 
+def chronological_order(start_node: Node):
+    """
+    Returns list of nodes in chronological order (topological sort).
+    Advances to a node only when all incoming edges are visited.
+    """
+    visited = set()
+    order = []
+    ready = [start_node]
+
+    while ready:
+        node = ready.pop(0)
+        if node in visited:
+            continue
+        visited.add(node)
+        order.append(node)
+
+        for edge in node.outgoing_edges:
+            target = edge.target
+            if all(e.source in visited for e in target.incoming_edges):
+                ready.append(target)
+
+    return order
+
 def test_graph():
     S = generate_graph()
 
     print(S)
-    print(S._outgoing)
+    print(S.outgoing_edges)
+
+    ordered_nodes = chronological_order(S)
+    print(ordered_nodes)
+
+    for n in ordered_nodes:
+        print(n.label)
     
 
 def main():
